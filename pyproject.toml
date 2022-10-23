@@ -10,7 +10,7 @@ packages = [{include = "gutendexer"}]
 [tool.poetry.dependencies]
 python = "^3.8"
 fastapi = {extras = ["all"], version = "^0.85.1"}
-
+motor = "^3.0.0"
 
 [build-system]
 requires = ["poetry-core"]
