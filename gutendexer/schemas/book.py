@@ -4,7 +4,7 @@ from typing import Optional, List
 
 class Author(BaseModel):
     name: str
-    birth_year: int
+    birth_year: Optional[int] = None
     death_year: Optional[int] = None
 
 

@@ -36,9 +36,11 @@ async def add_review(bookId: int, review: ReviewCreate, mongoSession: MotorClien
     Inserts a review to the mongo databae
     """
     collection = mongoSession.client.gutendexer.reviews
-    review_obj = Review(**review.dict(), bookId=bookId)
     try:
+        review_obj = Review(**review.dict(), bookId=bookId)
         await collection.insert_one(review_obj.dict(), session=mongoSession)
         return "ok"
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
     except:
         raise HTTPException(status_code=500, detail="Could not add review")
