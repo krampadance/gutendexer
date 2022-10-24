@@ -1,11 +1,11 @@
 from fastapi import APIRouter, Depends
 from motor.motor_tornado import MotorClientSession
 import aiohttp
-from typing import Union
+from typing import Union, List
 
-from ..schemas.book import Book
+from ..schemas.book import Book, BookBase
 from .dependencies import get_db_session, get_aiohttp_session
-from ..crud.books import get_book_info, add_review
+from ..crud.books import get_book_info, add_review, get_books_by_title
 from ..schemas.review import ReviewCreate
 
 router = APIRouter(
@@ -14,9 +14,9 @@ router = APIRouter(
 )
 
 
-# @router.get("/", response_model=List[Book])
-# def get_all(title: Union[str, None] = None, db: Session = Depends(get_db)):
-#     return get_all_books(db=db, title=title)
+@router.get("/search/", response_model=List[BookBase])
+async def search(title: str, aiohttpSession: aiohttp.ClientSession = Depends(get_aiohttp_session)):
+    return await get_books_by_title(title=title, aiohttpSession=aiohttpSession)
 
 
 @router.get("/{bookId}/", response_model=Book)
