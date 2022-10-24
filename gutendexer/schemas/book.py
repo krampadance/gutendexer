@@ -1,0 +1,21 @@
+from pydantic import BaseModel
+from typing import Optional, List
+
+
+class Author(BaseModel):
+    name: str
+    birth_year: int
+    death_year: Optional[int] = None
+
+
+class BookBase(BaseModel):
+    id: int
+    title: str
+    authors: List[Author]
+    languages: List[str]
+    download_count: int
+
+
+class Book(BookBase):
+    rating: Optional[float] = None
+    reviews: Optional[List[str]]
