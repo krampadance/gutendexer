@@ -11,6 +11,8 @@ packages = [{include = "gutendexer"}]
 python = "^3.8"
 fastapi = {extras = ["all"], version = "^0.85.1"}
 motor = "^3.0.0"
+tornado = "^6.2"
+aiohttp = "^3.8.3"
 
 [build-system]
 requires = ["poetry-core"]
