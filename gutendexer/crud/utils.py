@@ -27,6 +27,38 @@ def get_book_reviews_pipeline(bookId: int):
     ]
 
 
+def get_top_book_pipeline(amount: int):
+    """
+    Returns the pipeline object that is used for the aggregation
+    to get the reviews and average rating of a book,
+    """
+    return [
+        {
+            "$group": {
+                "_id": "$bookId",
+                "rating": {"$avg": "$rating"},
+                "reviews": {"$push": "$review"}
+            }
+        },
+        {
+            "$sort": {
+                "rating": -1
+            }
+        },
+        {
+            "$limit": amount
+        },
+        {
+            "$project": {
+                "bookId": "$_id",
+                "rating": 1,
+                "reviews": 1,
+                "_id": 0
+            }
+        }
+    ]
+
+
 def filter_title(title: str, search_string: str) -> bool:
     """
     We are filtering the title, base on the actual search string
