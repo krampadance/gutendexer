@@ -3,9 +3,9 @@ import aiohttp
 from typing import Union, List
 from motor.motor_tornado import MotorClientSession
 from ..schemas.review import Review, ReviewCreate
-from ..schemas.book import Book, BookBase
+from ..schemas.book import AverageMonthlyRating, Book, BookAverageMonthlyRating, BookBase
 from ..Config import Config
-from .utils import filter_title, get_book_reviews_pipeline, get_books, get_top_book_pipeline
+from .utils import filter_title, get_book_reviews_pipeline, get_books, get_top_book_pipeline, get_book_month_average_pipeline
 
 
 async def get_book_info(bookId: int, mongoSession: MotorClientSession, aiohttpSession: aiohttp.ClientSession) -> Book:
@@ -28,6 +28,19 @@ async def get_book_info(bookId: int, mongoSession: MotorClientSession, aiohttpSe
         raise HTTPException(
             status_code=500, detail="Could not fetch data from Gutendex")
     return Book(**review_obj, **book_data)
+
+
+async def get_book_monthly_average_ratings(bookId: int, mongoSession: MotorClientSession) -> BookAverageMonthlyRating:
+    """
+    Computes the monthly average ratings of a book in the mongo db
+    """
+    collection = mongoSession.client.gutendexer.reviews
+    monthly_averages = []
+    # Collect the monthly average rating for the specific bookId in mongo
+    async for agg in collection.aggregate(get_book_month_average_pipeline(
+            bookId=bookId), session=mongoSession):
+        monthly_averages.append(AverageMonthlyRating(**agg))
+    return BookAverageMonthlyRating(bookId=bookId, monthlyAverages=monthly_averages)
 
 
 async def get_top_books_by_rating(amount: int, mongoSession: MotorClientSession, aiohttpSession: aiohttp.ClientSession) -> List[Book]:
