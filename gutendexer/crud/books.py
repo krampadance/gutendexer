@@ -42,7 +42,7 @@ async def add_review(bookId: int, review: ReviewCreate, mongoSession: MotorClien
         return "ok"
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
-    except:
+    except Exception as e:
         raise HTTPException(status_code=500, detail="Could not add review")
 
 
