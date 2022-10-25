@@ -1,11 +1,11 @@
 from fastapi import APIRouter, Depends
 from motor.motor_tornado import MotorClientSession
 import aiohttp
-from typing import Union, List
+from typing import List
 
-from ..schemas.book import Book, BookAverageMonthlyRating, BookBase
+from ..schemas.book import Book, BookAverageMonthlyRating, BookBase, PaginatedBookList
 from .dependencies import get_db_session, get_aiohttp_session
-from ..crud.books import get_book_info, add_review, get_books_by_title, get_top_books_by_rating, get_book_monthly_average_ratings
+from ..crud.books import get_book_info, add_review, get_books_by_title, get_top_books_by_rating, get_book_monthly_average_ratings, get_books_by_title_paginated
 from ..schemas.review import ReviewCreate
 
 router = APIRouter(
@@ -17,6 +17,11 @@ router = APIRouter(
 @router.get("/search/", response_model=List[BookBase])
 async def search(title: str, aiohttpSession: aiohttp.ClientSession = Depends(get_aiohttp_session)):
     return await get_books_by_title(title=title, aiohttpSession=aiohttpSession)
+
+
+@router.get("/search-paginated/", response_model=PaginatedBookList)
+async def search_paginated(title: str, page: int = 1, aiohttpSession: aiohttp.ClientSession = Depends(get_aiohttp_session)):
+    return await get_books_by_title_paginated(title=title, page=page, aiohttpSession=aiohttpSession)
 
 
 @router.get("/top/", response_model=List[Book])

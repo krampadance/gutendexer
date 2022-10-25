@@ -29,3 +29,12 @@ class AverageMonthlyRating(BaseModel):
 class BookAverageMonthlyRating(BaseModel):
     bookId: int
     monthlyAverages: List[AverageMonthlyRating]
+
+
+class PaginatedBookList(BaseModel):
+    totalCount: int
+    page: int
+    totalPages: int
+    nextPage: Optional[int] = None
+    previousPage: Optional[int] = None
+    books: List[BookBase]
