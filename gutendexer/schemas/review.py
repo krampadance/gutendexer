@@ -1,6 +1,6 @@
 import datetime
 from datetime import datetime
-from pydantic import BaseModel, ValidationError, validator
+from pydantic import BaseModel, validator
 from typing import Optional
 
 
