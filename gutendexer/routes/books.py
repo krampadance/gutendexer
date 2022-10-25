@@ -25,5 +25,5 @@ async def get_book(bookId: int, mongoSession: MotorClientSession = Depends(get_d
 
 
 @router.post("/{bookId}/review/")
-async def review(book_id: int, review: ReviewCreate, mongoSession: MotorClientSession = Depends(get_db_session)):
-    return await add_review(bookId=book_id, review=review, mongoSession=mongoSession)
+async def review(bookId: int, review: ReviewCreate, mongoSession: MotorClientSession = Depends(get_db_session)):
+    return await add_review(bookId=bookId, review=review, mongoSession=mongoSession)
