@@ -27,6 +27,29 @@ def get_book_reviews_pipeline(bookId: int):
     ]
 
 
+def get_book_month_average_pipeline(bookId: int):
+    """
+    Returns the pipeline object that is used for the aggregation
+    to get average rating of a book per month
+    """
+    return [
+        {
+            "$match": {"bookId": bookId}
+        }, {
+            "$group": {
+                "_id": {"$dateToString": {"format": "%Y-%m", "date": "$createdAt"}},
+                "rating": {"$avg": "$rating"}
+            }
+        }, {
+            "$project": {
+                "rating": 1,
+                "_id": 0,
+                "month": "$_id"
+            }
+        }
+    ]
+
+
 def get_top_book_pipeline(amount: int):
     """
     Returns the pipeline object that is used for the aggregation

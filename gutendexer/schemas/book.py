@@ -19,3 +19,13 @@ class BookBase(BaseModel):
 class Book(BookBase):
     rating: Optional[float] = None
     reviews: Optional[List[str]]
+
+
+class AverageMonthlyRating(BaseModel):
+    month: str
+    rating: float
+
+
+class BookAverageMonthlyRating(BaseModel):
+    bookId: int
+    monthlyAverages: List[AverageMonthlyRating]
