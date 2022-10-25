@@ -5,7 +5,7 @@ from motor.motor_tornado import MotorClientSession
 from ..schemas.review import Review, ReviewCreate
 from ..schemas.book import Book, BookBase
 from ..Config import Config
-from .utils import filter_title, get_book_reviews_pipeline, get_books
+from .utils import filter_title, get_book_reviews_pipeline, get_books, get_top_book_pipeline
 
 
 async def get_book_info(bookId: int, mongoSession: MotorClientSession, aiohttpSession: aiohttp.ClientSession) -> Book:
@@ -20,15 +20,36 @@ async def get_book_info(bookId: int, mongoSession: MotorClientSession, aiohttpSe
         review_obj = agg
     # Get the book info from gutendex
     try:
-        async with aiohttpSession.get(Config.GUTENDEX_URL, params={"ids": bookId}) as res:
+        async with aiohttpSession.get("{}/{}".format(Config.GUTENDEX_URL, agg["bookId"])) as res:
             if res.status != 200:
                 raise "exception"
-            res_data = await res.json()
+            book_data = await res.json()
     except:
         raise HTTPException(
             status_code=500, detail="Could not fetch data from Gutendex")
-    book_data = res_data["results"][0]
     return Book(**review_obj, **book_data)
+
+
+async def get_top_books_by_rating(amount: int, mongoSession: MotorClientSession, aiohttpSession: aiohttp.ClientSession) -> List[Book]:
+    """
+    Computes the top n books based on rating and collects the book info from Gutendex.
+    """
+    collection = mongoSession.client.gutendexer.reviews
+    result = []
+    # Collect the reviews for the top books in mongo
+    async for agg in collection.aggregate(get_top_book_pipeline(
+            amount=amount), session=mongoSession):
+        # Get the book info from gutendex
+        try:
+            async with aiohttpSession.get("{}/{}".format(Config.GUTENDEX_URL, agg["bookId"])) as res:
+                if res.status != 200:
+                    raise "exception"
+                book_data = await res.json()
+                result.append(Book(**agg, **book_data))
+        except:
+            raise HTTPException(
+                status_code=500, detail="Could not fetch data from Gutendex")
+    return result
 
 
 async def add_review(bookId: int, review: ReviewCreate, mongoSession: MotorClientSession):

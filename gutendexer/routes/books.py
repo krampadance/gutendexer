@@ -5,7 +5,7 @@ from typing import Union, List
 
 from ..schemas.book import Book, BookBase
 from .dependencies import get_db_session, get_aiohttp_session
-from ..crud.books import get_book_info, add_review, get_books_by_title
+from ..crud.books import get_book_info, add_review, get_books_by_title, get_top_books_by_rating
 from ..schemas.review import ReviewCreate
 
 router = APIRouter(
@@ -17,6 +17,11 @@ router = APIRouter(
 @router.get("/search/", response_model=List[BookBase])
 async def search(title: str, aiohttpSession: aiohttp.ClientSession = Depends(get_aiohttp_session)):
     return await get_books_by_title(title=title, aiohttpSession=aiohttpSession)
+
+
+@router.get("/top/", response_model=List[Book])
+async def top_books(amount: int = 10, mongoSession: MotorClientSession = Depends(get_db_session), aiohttpSession: aiohttp.ClientSession = Depends(get_aiohttp_session)):
+    return await get_top_books_by_rating(amount=amount, mongoSession=mongoSession, aiohttpSession=aiohttpSession)
 
 
 @router.get("/{bookId}/", response_model=Book)
