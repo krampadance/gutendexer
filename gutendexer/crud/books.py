@@ -3,9 +3,10 @@ import aiohttp
 from typing import Union, List
 from motor.motor_tornado import MotorClientSession
 from ..schemas.review import Review, ReviewCreate
-from ..schemas.book import AverageMonthlyRating, Book, BookAverageMonthlyRating, BookBase
+from ..schemas.book import AverageMonthlyRating, Book, BookAverageMonthlyRating, BookBase, PaginatedBookList
 from ..Config import Config
 from .utils import filter_title, get_book_reviews_pipeline, get_books, get_top_book_pipeline, get_book_month_average_pipeline
+from math import ceil
 
 
 async def get_book_info(bookId: int, mongoSession: MotorClientSession, aiohttpSession: aiohttp.ClientSession) -> Book:
@@ -22,11 +23,12 @@ async def get_book_info(bookId: int, mongoSession: MotorClientSession, aiohttpSe
     try:
         async with aiohttpSession.get("{}/{}".format(Config.GUTENDEX_URL, agg["bookId"])) as res:
             if res.status != 200:
-                raise "exception"
+                d = await res.json()
+                raise Exception(d["detail"])
             book_data = await res.json()
-    except:
+    except Exception as e:
         raise HTTPException(
-            status_code=500, detail="Could not fetch data from Gutendex")
+            status_code=500, detail="Could not fetch data from Gutendex: {}".format(e))
     return Book(**review_obj, **book_data)
 
 
@@ -91,3 +93,38 @@ async def get_books_by_title(title: str, aiohttpSession: aiohttp.ClientSession) 
         result += [BookBase(**book_data) for book_data in books if filter_title(
             title=book_data["title"], search_string=title)]
     return result
+
+
+async def get_books_by_title_paginated(title: str, page: int, aiohttpSession: aiohttp.ClientSession) -> PaginatedBookList:
+    """
+    Searches the books from Gutendex based on title, but uses the pagination.
+    For simplicity and to make a paginated solution fast I do not filter on
+    the results titles, because, it would mess up with the results take from
+    gutendex.
+    """
+    if page <= 0:
+        raise HTTPException(
+            status_code=400, detail="Page index should be greater than 0")
+    try:
+        async with aiohttpSession.get(Config.GUTENDEX_URL, params={"page": page, "search": title}) as res:
+            if res.status != 200:
+                d = await res.json()
+                raise Exception(d["detail"])
+            data = await res.json()
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail="Could not fetch data from Gutendex: {}".format(e))
+
+    next_page = page + 1 if data["next"] is not None else None
+    prev_page = page - 1 if data["previous"] is not None else None
+    # In the last page the results might be fewer than normally, so that could lead to miscalculation
+    total_pages = page if next_page is None else ceil(
+        data["count"] / len(data["results"]))
+    return PaginatedBookList(
+        totalCount=data["count"],
+        page=page,
+        nextPage=next_page,
+        previousPage=prev_page,
+        totalPages=total_pages,
+        books=[BookBase(**book) for book in data["results"]]
+    )
