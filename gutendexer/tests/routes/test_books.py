@@ -1,8 +1,6 @@
 import json
 import pytest
-import pytest_asyncio
 from gutendexer.Config import Config
-from httpx import AsyncClient
 from gutendexer.schemas.review import ReviewCreate
 
 
@@ -14,8 +12,42 @@ async def test_add_review(client):
 
 
 @pytest.mark.asyncio
-async def test_get_book(client):
-    response = await client.get(url="/books/1/")
-    assert response.status_code == 200
-    assert response.json()["id"] == 1
-    assert response.json()["rating"] == 2.5
+async def test_get_book(client, aioresponses):
+    ratings = {
+        1: 2.5,
+        2: 3,
+        3: 2
+    }
+    reviews_lengths = {
+        1: 2,
+        2: 1,
+        3: 3
+    }
+    for id in range(1, 3):
+        payload = {
+            "id": id,
+            "title": "test",
+            "languages": ["en"],
+            "download_count": 10,
+            "authors": [{
+                "name": "author",
+                "birth_year": 1987,
+                "death_year": None
+            }]
+        }
+        aioresponses.get("{}/{}".format(Config.GUTENDEX_URL, id),
+                         status=200, payload=payload)
+        response = await client.get(url="/books/{}/".format(id))
+        assert response.status_code == 200
+        data = response.json()
+        assert data["id"] == payload["id"]
+        assert data["title"] == payload["title"]
+        assert data["languages"] == payload["languages"]
+        assert data["download_count"] == payload["download_count"]
+        assert len(data["authors"]) == len(payload["authors"])
+        assert data["authors"][0]["name"] == payload["authors"][0]["name"]
+        assert data["authors"][0]["birth_year"] == payload["authors"][0]["birth_year"]
+        assert data["authors"][0]["death_year"] == payload["authors"][0]["death_year"]
+        # Assert that average rating is correct
+        assert data["rating"] == ratings[id]
+        assert len(data["reviews"]) == reviews_lengths[id]

@@ -1,7 +1,6 @@
 import pytest_asyncio
 from ..Config import Config
 import motor.motor_asyncio
-from fastapi.testclient import TestClient
 from fastapi import FastAPI
 import pytest
 from typing import Generator
@@ -13,6 +12,7 @@ import sys
 import os
 from httpx import AsyncClient
 from datetime import datetime
+import aioresponses as aioresponses_
 
 
 # this is to include backend dir in sys.path so that we can import from db,main.py
@@ -24,6 +24,12 @@ def start_application():
     # Add routers to the app
     app.include_router(books.router)
     return app
+
+
+@pytest.fixture
+def aioresponses():
+    with aioresponses_.aioresponses() as aior:
+        yield aior
 
 
 @pytest_asyncio.fixture(scope="session", autouse=True)
@@ -99,24 +105,6 @@ async def mongoSession(event_loop, app: FastAPI) -> Generator[motor.motor_asynci
     finally:
         session.end_session()
 
-
-# @pytest_asyncio.fixture(scope="session")
-# async def client(
-#     app: FastAPI, mongoSession: motor.motor_asyncio.AsyncIOMotorClientSession
-# ) -> Generator[TestClient, Any, None]:
-#     """
-#     Create a new FastAPI TestClient that uses the `db_session` fixture to override
-#     the `get_db` dependency that is injected into routes.
-#     """
-#     def _get_test_db_session():
-#         try:
-#             yield mongoSession
-#         finally:
-#             pass
-
-#     app.dependency_overrides[get_db_session] = _get_test_db_session
-#     with TestClient(app) as client:
-#         yield client
 
 @pytest_asyncio.fixture(scope="session")
 async def client(app: FastAPI, mongoSession: motor.motor_asyncio.AsyncIOMotorClientSession) -> Generator:
