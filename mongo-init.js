@@ -9,3 +9,15 @@ db.createUser({
     'readWrite'  
   ],
 });
+
+db = db.getSiblingDB('gutendexerTest')
+
+db.createCollection('reviews');
+
+db.createUser({
+  user: 'api',
+  pwd: 'apiPassword',
+  roles: [
+    'readWrite'  
+  ],
+});
