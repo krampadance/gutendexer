@@ -22,7 +22,8 @@ class Book(BookBase):
 
 
 class AverageMonthlyRating(BaseModel):
-    month: str
+    month: int
+    year: int
     rating: float
 
 

@@ -68,7 +68,7 @@ async def create_db():
             "bookId": 3,
             "rating": 2,
             "review": "Review",
-            "createdAt": datetime.strptime("02/11/22", '%d/%m/%y')
+            "createdAt": datetime.strptime("02/11/21", '%d/%m/%y')
         },
         {
             "bookId": 3,

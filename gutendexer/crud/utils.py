@@ -37,15 +37,19 @@ def get_book_month_average_pipeline(bookId: int):
             "$match": {"bookId": bookId}
         }, {
             "$group": {
-                "_id": {"$dateToString": {"format": "%Y-%m", "date": "$createdAt"}},
+                "_id": {"month": {"$month": "$createdAt"}, "year": {"$year": "$createdAt"}},
                 "rating": {"$avg": "$rating"}
             }
         }, {
             "$project": {
                 "rating": 1,
                 "_id": 0,
-                "month": "$_id"
+                "_id": 0,
+                "month": "$_id.month",
+                "year": "$_id.year"
             }
+        }, {
+            "$sort": {"year": -1, "month": -1}
         }
     ]
 

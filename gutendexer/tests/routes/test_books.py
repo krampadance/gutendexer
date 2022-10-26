@@ -338,3 +338,44 @@ async def test_top_books_by_ratings(client, aioresponses):
     assert data[0]["rating"] == 5
     assert data[1]["id"] == 2
     assert data[1]["rating"] == 3
+
+
+@pytest.mark.asyncio
+async def test_monthly_average_rating(client):
+    """
+    Test monthly averages
+    """
+    response = await client.get("/books/1/monthly-average/")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["bookId"] == 1
+    monthly_avg = data["monthlyAverages"]
+    assert len(monthly_avg) == 1
+    assert monthly_avg[0]["month"] == 10
+    assert monthly_avg[0]["year"] == 2022
+    assert monthly_avg[0]["rating"] == 2.5
+
+    response = await client.get("/books/2/monthly-average/")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["bookId"] == 2
+    monthly_avg = data["monthlyAverages"]
+    assert len(monthly_avg) == 1
+    assert monthly_avg[0]["month"] == 10
+    assert monthly_avg[0]["year"] == 2022
+    assert monthly_avg[0]["rating"] == 3
+
+    response = await client.get("/books/3/monthly-average/")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["bookId"] == 3
+    monthly_avg = data["monthlyAverages"]
+    assert len(monthly_avg) == 2
+    # Monthly averages are sorted
+    assert monthly_avg[0]["month"] == 10
+    assert monthly_avg[0]["year"] == 2022
+    assert monthly_avg[0]["rating"] == 2
+
+    assert monthly_avg[1]["month"] == 11
+    assert monthly_avg[1]["year"] == 2021
+    assert monthly_avg[1]["rating"] == 2
