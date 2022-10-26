@@ -71,3 +71,6 @@ The tests should connect to the test database and not mess up with main database
 # Thought process
 The thought process can be found in the thoughtProcess.pdf file.
 
+# Development process
+You can also check the development process on the several branches used and pull requests made.
+

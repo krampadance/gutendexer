@@ -1,6 +1,6 @@
 from fastapi import HTTPException
 import aiohttp
-from typing import Union, List
+from typing import List
 from motor.motor_tornado import MotorClientSession
 from ..schemas.review import Review, ReviewCreate
 from ..schemas.book import AverageMonthlyRating, Book, BookAverageMonthlyRating, BookBase, PaginatedBookList
