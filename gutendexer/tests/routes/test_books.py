@@ -74,7 +74,7 @@ async def test_get_book_gutendex_exception(client, aioresponses):
 @pytest.mark.asyncio
 async def test_search_book(client, aioresponses):
     """
-    Tests getting a book from the database
+    Tests searching a book title from gutendex
     """
     title = "A book title"
 
@@ -139,6 +139,9 @@ async def test_search_book(client, aioresponses):
 
 @pytest.mark.asyncio
 async def test_search_book_gutendex_exception(client, aioresponses):
+    """
+    Test searching a book title from gutendex but getting an error response from it.
+    """
     title = "Exception title"
     aioresponses.get("{}?search={}".format(Config.GUTENDEX_URL, title),
                      status=400, payload={"detail": "Not found."})
@@ -147,3 +150,87 @@ async def test_search_book_gutendex_exception(client, aioresponses):
     assert response.status_code == 500
     assert response.json()[
         "detail"] == "Could not fetch data from Gutendex: Not found."
+
+
+@pytest.mark.asyncio
+async def test_search_book_paginated(client, aioresponses):
+    """
+    Tests searching a book using pagination
+    """
+    title = "A book title"
+
+    payload = {
+        "count": 3,
+        "next": "{}?search={}&page=2".format(Config.GUTENDEX_URL, title),
+        "previous": None,
+        "results": [
+            {
+                "id":  1,
+                "title": "A book with title",
+                "languages": ["en"],
+                "download_count": 10,
+                "authors": [{
+                    "name": "author",
+                    "birth_year": 1987,
+                    "death_year": None
+                }]
+            },
+            {
+                "id":  2,
+                "title": "No remorse",
+                "languages": ["en"],
+                "download_count": 10,
+                "authors": [{
+                    "name": "Book",  # It is not filtered out
+                    "birth_year": 1987,
+                    "death_year": None
+                }]
+            }
+        ]
+    }
+    aioresponses.get("{}?search={}&page=1".format(Config.GUTENDEX_URL, title),
+                     status=200, payload=payload)
+
+    response = await client.get(url="/books/search-paginated/?title={}".format(title))
+    assert response.status_code == 200
+    data = response.json()
+    assert data["totalCount"] == 3
+    assert data["page"] == 1
+    assert data["totalPages"] == 2
+    assert data["nextPage"] == 2
+    assert data["previousPage"] == None
+    assert len(data["books"]) == 2
+    assert data["books"][0]["id"] == 1
+    assert data["books"][1]["id"] == 2
+
+    payload = {
+        "count": 3,
+        "next": None,
+        "previous": "{}?search={}&page=1".format(Config.GUTENDEX_URL, title),
+        "results": [
+            {
+                "id":  3,
+                "title": "A book with title",
+                "languages": ["en"],
+                "download_count": 10,
+                "authors": [{
+                    "name": "author",
+                    "birth_year": 1987,
+                    "death_year": None
+                }]
+            }
+        ]
+    }
+    aioresponses.get("{}?search={}&page=2".format(Config.GUTENDEX_URL, title),
+                     status=200, payload=payload)
+
+    response = await client.get(url="/books/search-paginated/?title={}&page=2".format(title))
+    assert response.status_code == 200
+    data = response.json()
+    assert data["totalCount"] == 3
+    assert data["page"] == 2
+    assert data["totalPages"] == 2
+    assert data["nextPage"] == None
+    assert data["previousPage"] == 1
+    assert len(data["books"]) == 1
+    assert data["books"][0]["id"] == 3
