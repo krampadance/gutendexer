@@ -58,12 +58,13 @@ async def get_top_books_by_rating(amount: int, mongoSession: MotorClientSession,
         try:
             async with aiohttpSession.get("{}/{}".format(Config.GUTENDEX_URL, agg["bookId"])) as res:
                 if res.status != 200:
-                    raise "exception"
+                    d = await res.json()
+                    raise Exception(d["detail"])
                 book_data = await res.json()
                 result.append(Book(**agg, **book_data))
-        except:
+        except Exception as e:
             raise HTTPException(
-                status_code=500, detail="Could not fetch data from Gutendex")
+                status_code=500, detail="Could not fetch data from Gutendex: {}".format(e))
     return result
 
 
@@ -86,7 +87,7 @@ async def get_books_by_title(title: str, aiohttpSession: aiohttp.ClientSession) 
     """
     Searches the books from Gutendex based on title.
     """
-    next = "{}?search={}".format(Config.GUTENDEX_URL, title)
+    next = "{}/?search={}".format(Config.GUTENDEX_URL, title)
     result = []
     while next is not None:  # Need to get all the books based on gutendex pagination
         books, next = await get_books(url=next, aiohttpSession=aiohttpSession)

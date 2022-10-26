@@ -15,4 +15,4 @@ class Config(object):
     DATABASE = os.getenv("DATABASE", "gutendexer")
 
     # Gutendex related variables
-    GUTENDEX_URL = os.getenv("GUTENDEX_URL", "http://gutendex.com/books/")
+    GUTENDEX_URL = os.getenv("GUTENDEX_URL", "http://gutendex.com/books")
