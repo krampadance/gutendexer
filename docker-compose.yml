@@ -6,9 +6,22 @@ services:
     ports:
       - 27017:27017
     volumes:
-      - ./mongoData:/data/db
+      # - ./mongoData:/data/db
       - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
     environment:
       - MONGO_INITDB_ROOT_USERNAME=root
       - MONGO_INITDB_ROOT_PASSWORD=password
-      - MONGO_INITDB_DATABASE=eventor
+  api:
+    build: .
+    depends_on:
+      - mongodb
+    environment:
+      - MONGO_HOST=mongodb
+      - MONGO_USER=api
+      - MONGO_PASSWORD=apiPassword
+      - DATABASE=gutendexer
+      - GUTENDEX_URL=http://gutendex.com/books
+    ports: 
+      - 8000:8000
+    restart: always
+    

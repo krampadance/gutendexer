@@ -22,14 +22,16 @@ async def test_get_book(client, aioresponses):
     ratings = {
         1: 2.5,
         2: 3,
-        3: 2
+        3: 2,
+        4: None
     }
     reviews_lengths = {
         1: 2,
         2: 1,
-        3: 3
+        3: 3,
+        4: None
     }
-    for id in range(1, 4):
+    for id in range(1, 5):
         payload = {
             "id": id,
             "title": "test",
@@ -55,8 +57,12 @@ async def test_get_book(client, aioresponses):
         assert data["authors"][0]["birth_year"] == payload["authors"][0]["birth_year"]
         assert data["authors"][0]["death_year"] == payload["authors"][0]["death_year"]
         # Assert that average rating is correct
-        assert data["rating"] == ratings[id]
-        assert len(data["reviews"]) == reviews_lengths[id]
+        if id != 4:
+            assert data["rating"] == ratings[id]
+            assert len(data["reviews"]) == reviews_lengths[id]
+        else:  # If a book has no reviews, ratings and reviews should be None
+            assert data["rating"] == None
+            assert data["reviews"] == None
 
 
 @pytest.mark.asyncio
