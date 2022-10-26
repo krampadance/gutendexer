@@ -135,3 +135,15 @@ async def test_search_book(client, aioresponses):
     assert len(data) == 2
     assert data[0]["id"] == 1
     assert data[1]["id"] == 3
+
+
+@pytest.mark.asyncio
+async def test_search_book_gutendex_exception(client, aioresponses):
+    title = "Exception title"
+    aioresponses.get("{}?search={}".format(Config.GUTENDEX_URL, title),
+                     status=400, payload={"detail": "Not found."})
+
+    response = await client.get(url="/books/search/?title={}".format(title))
+    assert response.status_code == 500
+    assert response.json()[
+        "detail"] == "Could not fetch data from Gutendex: Not found."
