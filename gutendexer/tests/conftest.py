@@ -32,13 +32,14 @@ def aioresponses():
         yield aior
 
 
-@pytest_asyncio.fixture(scope="session", autouse=True)
+@pytest_asyncio.fixture(scope="module", autouse=True)
 async def create_db():
     client = motor.motor_asyncio.AsyncIOMotorClient(
         "mongodb://{}:{}@{}/{}".format(
-            Config.MONGO_USER, Config.MONGO_PASSWORD, Config.MONGO_HOST, "gutendexer"))
+            Config.MONGO_USER, Config.MONGO_PASSWORD, Config.MONGO_HOST, Config.DATABASE_TEST))
+    # Using default database according to the connection string, This way we can use different database for tests and different for normal app
     db = client.get_default_database()
-    collection = client.gutendexer.reviews
+    collection = db.reviews
     await collection.insert_many([
         {
             "bookId": 1,
@@ -95,10 +96,10 @@ def event_loop():
 
 
 @pytest_asyncio.fixture(scope="session")
-async def mongoSession(event_loop, app: FastAPI) -> Generator[motor.motor_asyncio.AsyncIOMotorClientSession, Any, None]:
+async def mongoSession(app: FastAPI) -> Generator[motor.motor_asyncio.AsyncIOMotorClientSession, Any, None]:
     client = motor.motor_asyncio.AsyncIOMotorClient(
         "mongodb://{}:{}@{}/{}".format(
-            Config.MONGO_USER, Config.MONGO_PASSWORD, Config.MONGO_HOST, "gutendexer"))
+            Config.MONGO_USER, Config.MONGO_PASSWORD, Config.MONGO_HOST, Config.DATABASE_TEST))
     session = await client.start_session()
     try:
         yield session
@@ -106,7 +107,7 @@ async def mongoSession(event_loop, app: FastAPI) -> Generator[motor.motor_asynci
         session.end_session()
 
 
-@pytest_asyncio.fixture(scope="session")
+@ pytest_asyncio.fixture(scope="session")
 async def client(app: FastAPI, mongoSession: motor.motor_asyncio.AsyncIOMotorClientSession) -> Generator:
     def _get_test_db_session():
         try:
@@ -114,7 +115,7 @@ async def client(app: FastAPI, mongoSession: motor.motor_asyncio.AsyncIOMotorCli
         finally:
             pass
 
+    # Overriding get_db_session of app to use the one that connects to the test database
     app.dependency_overrides[get_db_session] = _get_test_db_session
     async with AsyncClient(app=app, base_url="http://testserver") as client:
-
         yield client
