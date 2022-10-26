@@ -379,3 +379,11 @@ async def test_monthly_average_rating(client):
     assert monthly_avg[1]["month"] == 11
     assert monthly_avg[1]["year"] == 2021
     assert monthly_avg[1]["rating"] == 2
+
+    # Testing book without any reviews
+    response = await client.get("/books/4/monthly-average/")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["bookId"] == 4
+    monthly_avg = data["monthlyAverages"]
+    assert len(monthly_avg) == 0
