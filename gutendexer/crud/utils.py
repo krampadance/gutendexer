@@ -84,7 +84,7 @@ def get_top_book_pipeline(amount: int):
 
 def filter_title(title: str, search_string: str) -> bool:
     """
-    We are filtering the title, base on the actual search string
+    We are filtering the title, based on the actual search string
     because gutendex, checks for the search terms either in the 
     title or the author.
 
@@ -94,7 +94,7 @@ def filter_title(title: str, search_string: str) -> bool:
     so since we want to search on title we have to filter it.
     """
     for term in search_string.split(" "):
-        if term not in title:
+        if term.lower() not in title.lower():
             return False
     return True
 
@@ -107,9 +107,10 @@ async def get_books(url, aiohttpSession: aiohttp.ClientSession):
     try:
         async with aiohttpSession.get(url) as res:
             if res.status != 200:
-                raise "exception"
+                d = await res.json()
+                raise Exception(d["detail"])
             res_data = await res.json()
             return res_data["results"], res_data["next"]
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail="Could not fetch data from Gutendex")
+            status_code=500, detail="Could not fetch data from Gutendex: {}".format(e))

@@ -69,3 +69,69 @@ async def test_get_book_gutendex_exception(client, aioresponses):
     assert response.status_code == 500
     assert response.json()[
         "detail"] == "Could not fetch data from Gutendex: Not found."
+
+
+@pytest.mark.asyncio
+async def test_search_book(client, aioresponses):
+    """
+    Tests getting a book from the database
+    """
+    title = "A book title"
+
+    payload1 = {
+        "count": 3,
+        "next": "{}?search={}&page=2".format(Config.GUTENDEX_URL, title),
+        "previous": None,
+        "results": [
+            {
+                "id":  1,
+                "title": "A book with title",
+                "languages": ["en"],
+                "download_count": 10,
+                "authors": [{
+                    "name": "author",
+                    "birth_year": 1987,
+                    "death_year": None
+                }]
+            },
+            {
+                "id":  2,
+                "title": "No remorse",
+                "languages": ["en"],
+                "download_count": 10,
+                "authors": [{
+                    "name": "Book",  # It should be filtered out
+                    "birth_year": 1987,
+                    "death_year": None
+                }]
+            }
+        ]
+    }
+    aioresponses.get("{}?search={}".format(Config.GUTENDEX_URL, title),
+                     status=200, payload=payload1)
+    payload2 = {
+        "count": 3,
+        "next": None,
+        "previous": "{}?search={}".format(Config.GUTENDEX_URL, id, title),
+        "results": [
+            {
+                "id":  3,
+                "title": "A book title",
+                "languages": ["en"],
+                "download_count": 10,
+                "authors": [{
+                    "name": "author",
+                    "birth_year": 1987,
+                    "death_year": None
+                }]
+            }
+        ]
+    }
+    aioresponses.get("{}?search={}&page=2".format(Config.GUTENDEX_URL, title),
+                     status=200, payload=payload2)
+    response = await client.get(url="/books/search/?title={}".format(title))
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data) == 2
+    assert data[0]["id"] == 1
+    assert data[1]["id"] == 3
