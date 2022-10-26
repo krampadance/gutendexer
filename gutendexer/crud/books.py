@@ -21,7 +21,7 @@ async def get_book_info(bookId: int, mongoSession: MotorClientSession, aiohttpSe
         review_obj = agg
     # Get the book info from gutendex
     try:
-        async with aiohttpSession.get("{}/{}".format(Config.GUTENDEX_URL, agg["bookId"])) as res:
+        async with aiohttpSession.get("{}/{}".format(Config.GUTENDEX_URL, bookId)) as res:
             if res.status != 200:
                 d = await res.json()
                 raise Exception(d["detail"])

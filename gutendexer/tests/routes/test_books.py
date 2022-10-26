@@ -6,6 +6,9 @@ from gutendexer.schemas.review import ReviewCreate
 
 @pytest.mark.asyncio
 async def test_add_review(client):
+    """
+    Test adding a review
+    """
     data = ReviewCreate(rating=5, review="A review")
     response = await client.post("/books/10/review/", data=json.dumps(data.dict()))
     assert response.status_code == 200
@@ -13,6 +16,9 @@ async def test_add_review(client):
 
 @pytest.mark.asyncio
 async def test_get_book(client, aioresponses):
+    """
+    Tests getting a book from the database
+    """
     ratings = {
         1: 2.5,
         2: 3,
@@ -51,3 +57,15 @@ async def test_get_book(client, aioresponses):
         # Assert that average rating is correct
         assert data["rating"] == ratings[id]
         assert len(data["reviews"]) == reviews_lengths[id]
+
+
+@pytest.mark.asyncio
+async def test_get_book_gutendex_exception(client, aioresponses):
+    id = 100
+    aioresponses.get("{}/{}".format(Config.GUTENDEX_URL, id),
+                     status=400, payload={"detail": "Not found."})
+
+    response = await client.get(url="/books/{}/".format(id))
+    assert response.status_code == 500
+    assert response.json()[
+        "detail"] == "Could not fetch data from Gutendex: Not found."
