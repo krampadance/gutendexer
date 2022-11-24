@@ -2,7 +2,6 @@
 
 The api that collects data from [gutendex api](http://gutendex.com) and also offers the chance to add reviews on several books.
 
-It is base on the description found in Software Engineer Challenge pdf.
 
 # Technologies used
 To develop the api, [Fastapi web framework](https://fastapi.tiangolo.com/) was used.
@@ -67,10 +66,4 @@ To run the tests, you need to run them locally. So have the mongodb instance run
 in the command shell.
 
 The tests should connect to the test database and not mess up with main database of the project.
-
-# Thought process
-The thought process can be found in the thoughtProcess.pdf file.
-
-# Development process
-You can also check the development process on the several branches used and pull requests made.
 
